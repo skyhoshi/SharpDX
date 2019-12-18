@@ -1,5 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\Build\SharpDX.props" />
+﻿<Project Sdk="MSBuild.Sdk.Extras">
+  
   <PropertyGroup>
     <TargetFrameworks>net40;net45;netstandard1.1;uap10.0</TargetFrameworks>
     <PackageId>SharpDX.Mathematics</PackageId>
@@ -18,6 +18,4 @@
   <ItemGroup>
     <ProjectReference Include="..\SharpDX\SharpDX.csproj" />
   </ItemGroup>
-
-  <Import Project="..\..\Build\SharpDX.targets" />
 </Project>

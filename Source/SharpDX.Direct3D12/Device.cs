@@ -304,13 +304,36 @@ namespace SharpDX.Direct3D12
         /// Creates a descriptor heap object.
         /// </summary>	
         /// <param name="descriptorHeapDesc">No documentation.</param>	
-        /// <returns>No documentation.</returns>	
+        /// <returns>New instance of <see cref="SharpDX.Direct3D12.DescriptorHeap"/>.</returns>	
         /// <msdn-id>dn788662</msdn-id>
         /// <unmanaged>HRESULT ID3D12Device::CreateDescriptorHeap([In] const D3D12_DESCRIPTOR_HEAP_DESC* pDescriptorHeapDesc,[In] const GUID&amp; riid,[Out] ID3D12DescriptorHeap** ppvHeap)</unmanaged>	
         /// <unmanaged-short>ID3D12Device::CreateDescriptorHeap</unmanaged-short>	
         public SharpDX.Direct3D12.DescriptorHeap CreateDescriptorHeap(SharpDX.Direct3D12.DescriptorHeapDescription descriptorHeapDesc)
         {
             return CreateDescriptorHeap(descriptorHeapDesc, Utilities.GetGuidFromType(typeof(DescriptorHeap)));
+        }
+
+        /// <summary>	
+        /// Creates a descriptor heap object.
+        /// </summary>	
+        /// <param name="type">The heap type.</param>	
+        /// <param name="descriptorCount">The descriptor count.</param>	
+        /// <param name="flags">The optional heap flags.</param>	
+        /// <param name="nodeMask">Multi GPU node mask.</param>	
+        /// <returns>New instance of <see cref="SharpDX.Direct3D12.DescriptorHeap"/>.</returns>	
+        /// <msdn-id>dn788662</msdn-id>
+        /// <unmanaged>HRESULT ID3D12Device::CreateDescriptorHeap([In] const D3D12_DESCRIPTOR_HEAP_DESC* pDescriptorHeapDesc,[In] const GUID&amp; riid,[Out] ID3D12DescriptorHeap** ppvHeap)</unmanaged>	
+        /// <unmanaged-short>ID3D12Device::CreateDescriptorHeap</unmanaged-short>	
+        public SharpDX.Direct3D12.DescriptorHeap CreateDescriptorHeap(DescriptorHeapType type, int descriptorCount, DescriptorHeapFlags flags = DescriptorHeapFlags.None, int nodeMask = 0)
+        {
+            DescriptorHeapDescription description = new DescriptorHeapDescription
+            {
+                Type = type,
+                DescriptorCount = descriptorCount,
+                Flags = flags,
+                NodeMask = nodeMask,
+            };
+            return CreateDescriptorHeap(description, Utilities.GetGuidFromType(typeof(DescriptorHeap)));
         }
 
         /// <summary>	
@@ -402,7 +425,7 @@ namespace SharpDX.Direct3D12
                     {
                         for (int i = 0; i < elements.Length; i++)
                         {
-                            nativeElements[i].__MarshalFree();
+                            elements[i].__MarshalFree(ref nativeElements[i]);
                         }
                     }
 
@@ -410,7 +433,7 @@ namespace SharpDX.Direct3D12
                     {
                         for (int i = 0; i < streamOutElements.Length; i++)
                         {
-                            nativeStreamOutElements[i].__MarshalFree();
+                            streamOutElements[i].__MarshalFree(ref nativeStreamOutElements[i]);
                         }
                     }
                 }
@@ -541,6 +564,46 @@ namespace SharpDX.Direct3D12
             }
         }
 
+        public unsafe FeatureDataD3D12Options1 D3D12Options1
+        {
+            get
+            {
+                FeatureDataD3D12Options1 options = new FeatureDataD3D12Options1();
+                this.CheckFeatureSupport(Feature.D3D12Options1, new IntPtr(&options), Utilities.SizeOf<FeatureDataD3D12Options1>());
+                return options;
+            }
+        }
+
+        public unsafe FeatureDataD3D12Options2 D3D12Options2
+        {
+            get
+            {
+                FeatureDataD3D12Options2 options = new FeatureDataD3D12Options2();
+                this.CheckFeatureSupport(Feature.D3D12Options2, new IntPtr(&options), Utilities.SizeOf<FeatureDataD3D12Options2>());
+                return options;
+            }
+        }
+
+        public unsafe FeatureDataD3D12Options3 D3D12Options3
+        {
+            get
+            {
+                FeatureDataD3D12Options3 options = new FeatureDataD3D12Options3();
+                this.CheckFeatureSupport(Feature.D3D12Options3, new IntPtr(&options), Utilities.SizeOf<FeatureDataD3D12Options3>());
+                return options;
+            }
+        }
+
+        public unsafe FeatureDataD3D12Options4 D3D12Options4
+        {
+            get
+            {
+                FeatureDataD3D12Options4 options = new FeatureDataD3D12Options4();
+                this.CheckFeatureSupport(Feature.D3D12Options4, new IntPtr(&options), Utilities.SizeOf<FeatureDataD3D12Options4>());
+                return options;
+            }
+        }
+
         /// <summary>	
         /// <p> Gets information about the features that are supported by the current graphics driver.</p>	
         /// </summary>	
@@ -562,6 +625,41 @@ namespace SharpDX.Direct3D12
                 FeatureDataArchitecture options = new FeatureDataArchitecture();
                 this.CheckFeatureSupport(Feature.Architecture, new IntPtr(&options), Utilities.SizeOf<FeatureDataArchitecture>());
                 return options;
+            }
+        }
+
+        public unsafe FeatureDataGpuVirtualAddressSupport GpuVirtualAddressSupport
+        {
+            get
+            {
+                FeatureDataGpuVirtualAddressSupport options = new FeatureDataGpuVirtualAddressSupport();
+                this.CheckFeatureSupport(Feature.GpuVirtualAddressSupport, new IntPtr(&options), Utilities.SizeOf<FeatureDataGpuVirtualAddressSupport>());
+                return options;
+            }
+        }
+
+        public unsafe FeatureDataShaderModel CheckShaderModel(ShaderModel highestShaderModel)
+        {
+            var options = new FeatureDataShaderModel
+            {
+                HighestShaderModel = highestShaderModel
+            };
+            this.CheckFeatureSupport(Feature.ShaderModel, new IntPtr(&options), Utilities.SizeOf<FeatureDataShaderModel>());
+            return options;
+        }
+
+        public unsafe FeatureLevel CheckMaxSupportedFeatureLevel(params FeatureLevel[] levels)
+        {
+            fixed (FeatureLevel* levelsPtr = &levels[0])
+            {
+                var featureLevels = new FeatureDataFeatureLevels
+                {
+                    FeatureLevelCount = levels.Length,
+                    FeatureLevelsRequestedPointer = new IntPtr(levelsPtr)
+                };
+
+                this.CheckFeatureSupport(Feature.FeatureLevels, new IntPtr(&featureLevels), Utilities.SizeOf<FeatureDataFeatureLevels>());
+                return featureLevels.MaxSupportedFeatureLevel;
             }
         }
 
